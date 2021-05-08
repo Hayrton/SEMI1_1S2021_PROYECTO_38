@@ -36,7 +36,7 @@ create table Respuesta(
     cod_respuesta   int not null auto_increment,
     respuestas      varchar(500) not null,
     imagen          varchar(100),
-    cod_examen      int not null
+    cod_pregunta      int not null,
     primary key (cod_respuesta),
-    foreign key (cod_examen) references Pregunta(cod_examen)
+    foreign key (cod_pregunta) references Pregunta(cod_pregunta)
 );
