@@ -4,6 +4,16 @@ var cors = require('cors')
 var AWS = require('aws-sdk');
 const mysql = require('mysql');
 
+const uuidv1 = require('uuid/v1');
+/*
+AWS.config.loadFromPath({
+  accessKeyId:'AKIA2TKFJE5IAJRNLTEP',
+  secretAccessKey:'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',
+  region:'us-east-1'
+
+});*/
+
+
 var bodyParser = require('body-parser')
 
 const app = express()
@@ -31,7 +41,11 @@ const rek = new AWS.Rekognition({
 }
 );
 
-
+const translate = new AWS.Translate({
+        accessKeyId:'AKIA2TKFJE5IAJRNLTEP',
+        secretAccessKey:'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',
+        region:'us-east-1'
+});
 
 const connection = mysql.createConnection({
     host: 'database-1.cjcnmccjn0xj.us-east-1.rds.amazonaws.com',
@@ -40,6 +54,13 @@ const connection = mysql.createConnection({
     database: 'proyectosemi'
   });
 
+  const Polly = new AWS.Polly({
+    signatureVersion: 'v4',
+    region: 'us-east-1',
+    accessKeyId:'AKIA2TKFJE5IAJRNLTEP',
+    secretAccessKey:'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',
+  })
+
 
   connection.connect((err) => {
     if (err) throw err;
@@ -47,23 +68,134 @@ const connection = mysql.createConnection({
   });
 
 
+  app.post("/api/cexamen",async (req, res)=> {
+    
+    let body=req.body;
+    const insert = connection.query('INSERT INTO Examen(tema,fecha) VALUES(?,?)', [body.tema,body.fecha], function (err, result) {
+        if (err) throw err;
+
+        res.json(result);
+      });
+  
+    
+  });
+
+
+
+  app.get("/api/examenes",async (req, res)=> {
+    const insert = connection.query('Select * from Examen', function (err, rows) {
+        if (err) throw err;
+        res.json(rows);
+      });
+  });
+
+  app.get("/api/examen",async (req, res)=> {
+    let body=req.body;
+    const insert = connection.query('Select * from Examen where(cod_examen=?)',body.id,function (err, rows) {
+        if (err) throw err;
+        res.json(rows);
+      });
+  });
+
+  app.post("/api/cpregunta",async (req, res)=> {
+    
+    let body=req.body;
+    const insert = connection.query('INSERT INTO Pregunta(enunciado,correcta,cod_examen) VALUES(?,?,?)', [body.enunciado,body.correcta,body.cod_examen], function (err, result) {
+        if (err) throw err;
+
+        res.json(result);
+      });
+  
+    
+  });
+
+  app.post("/api/preguntas",async (req, res)=> {
+    let body=req.body;
+    const insert = connection.query('Select * from Pregunta where(cod_examen=?)',body.id,function (err, rows) {
+        if (err) throw err;
+        res.json(rows);
+      });
+  });
+
+  app.get("/api/pregunta",async (req, res)=> {
+    const insert = connection.query('Select * from Examen', function (err, rows) {
+        if (err) throw err;
+        res.json(rows);
+      });
+  });
+
+  app.post("/api/crespuesta",async (req, res)=> {
+    
+    let body=req.body;
+    const insert = connection.query('INSERT INTO Respuesta(respuestas,imagen,cod_pregunta) VALUES(?,?,?)', [body.respuesta,body.imagen,body.cod_pregunta], function (err, result) {
+        if (err) throw err;
+
+        res.json(result);
+      });
+  
+    
+  });
+
+  app.post("/api/respuestas",async (req, res)=> {
+    let body=req.body;
+    const insert = connection.query('Select * from Respuesta where(cod_pregunta=?)',body.id,function (err, rows) {
+        if (err) throw err;
+        res.json(rows);
+      });
+  });
+
+  app.get("/api/respuesta",async (req, res)=> {
+    const insert = connection.query('Select * from Respuesta', function (err, rows) {
+        if (err) throw err;
+        res.json(rows);
+      });
+  });
+
+
+  app.post("/api/cpersona",async (req, res)=> {
+    
+    let body=req.body;
+    const insert = connection.query('INSERT INTO Persona (nombre,correo,fecha_nacimiento,telefono,contrasenia,rol,imagen) VALUES(?,?,?,?,?,?,?)', [body.nombre,body.correo,body.fecha_nacimiento,body.telefono,body.contrasenia,body.rol,body.imagen], function (err, result) {
+        if (err) throw err;
+
+        res.json(result);
+      });
+  });
+
+  app.get("/api/personas",async (req, res)=> {
+
+    const insert = connection.query('Select * from Persona',function (err, rows) {
+        if (err) throw err;
+        res.json(rows);
+      });
+  });
+
+  app.get("/api/persona",async (req, res)=> {
+    let body=req.body;
+    const insert = connection.query('Select * from Persona where(id_persona=?)',body.id,function (err, rows) {
+        if (err) throw err;
+        res.json(rows);
+      });
+  });
 
 
 
 
-  app.post('/upload',async (req,res) => {
+
+
+  app.post('/api/upload',async (req,res) => {
     let file = req.files['file']
       
         const params ={
-            Bucket:'practica1-g38-imagenes',
-            Key:"Fotos_Perfil/"+file.name,
+            Bucket:'proyecto-semi1-g38',
+            Key:"imagenes/"+file.name,
             Body:file.data,
             ACL:'public-read',
             ContentType:"image"
         }
+        
 
         const putObjectpromise= s3.upload(params).promise();
-        //let bandera=false
         putObjectpromise.then((result)=>{
             console.log(result.Location)
             res.json({url:result.Location})    
@@ -71,10 +203,134 @@ const connection = mysql.createConnection({
             console.log(error,"error_promise");
             res.json({dato:"result.Location"})
         })
-        
-        // res.json({mensaje:bandera})
+      
 })
 
+
+app.post("/api/login",async (req, res)=> {
+    
+  let user=req.body.nombre
+  let pass=req.body.contrasenia
+
+  connection.query('SELECT * FROM Persona where(nombre=\''+user+'\' and contrasenia=\''+pass+'\' )', (err,rows) => {
+  if(err) throw err;
+  
+  let bandera=false
+  if(rows.length==1){
+      bandera=true
+      res.json({estado:bandera,Usuario:{id_persona:rows[0].id_persona,nombre:rows[0].nombre,correo:rows[0].correo,telefono:rows[0].telefono,rol:rows[0].rol,imagen:rows[0].imagen}});
+  }else{
+      res.json({estado:bandera,Usuario:""});
+  }    
+  
+});
+});
+
+
+app.post("/api/asignar",async (req, res)=> {
+    
+  let body=req.body;
+  const insert = connection.query('INSERT INTO Asigna_Examen(id_persona,cod_examen,nota) VALUES(?,?,?)', [body.id_per,body.id_ex,body.nota], function (err, result) {
+      if (err) throw err;
+
+      res.json(result);
+    });
+});
+
+
+app.post("/api/examenes/persona",async (req, res)=> {
+    
+  let body=req.body;
+  const insert = connection.query('select * from Examen e join Asigna_Examen ae on ae.cod_examen=e.cod_examen join Persona p on p.id_persona= ae.id_persona where p.id_persona=?', [body.id], function (err, result) {
+      if (err) throw err;
+      res.json(result);
+    });
+});
+
+
+
+app.post('/api/translate', (req, res) => {
+  let body = req.body
+
+  let texto = body.texto
+
+  let params = {
+    SourceLanguageCode: 'auto',
+    TargetLanguageCode: 'es',
+    Text: texto
+  };
+
+
+  translate.translateText(params, function (err, data) {
+    if (err) {
+      console.log(err, err.stack);
+      res.send({ error: err })
+    } else {
+      console.log(data);
+      res.send({ message: data })
+    }
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
+app.post( '/api/polly',async(req,res)=>{
+
+  let body=req.body;
+  let pollyparams = {
+    'Text': body.texto,
+    'TextType': "text", 
+    'OutputFormat': 'mp3',
+    'VoiceId': 'Amy'
+}
+
+Polly.synthesizeSpeech(pollyparams, (err, data) => {
+    if (err) {
+        console.log(err.message)
+    } else if (data) {
+      let key = uuidv1();
+        let s3params = {
+            Body: data.AudioStream, 
+            Bucket: "proyecto-semi1-g38", 
+            Key: "imagenes/"+key+".mp3",
+            ACL: "public-read"
+        };
+
+        s3.upload(s3params, function(err, data) {
+            if (err) {
+              console.log(err.message);  
+              res.json({error:err.message})
+                //console.log(err.message);
+            } else {
+              console.log(data.Location);
+              res.json({url:data.Location})    
+              //
+            }
+        });
+    }
+})
+
+});
+
+
+
+
+
+
+
+
+app.listen(3000,"0.0.0.0",() => console.log('Corriendo en el puerto 3000..'))
+
+
+/*
 app.post('/upload2',async (req,res) => {
     let file = req.files['file']
 
@@ -99,11 +355,6 @@ app.post('/upload2',async (req,res) => {
         // res.json({mensaje:bandera})
 })
 
-app.get("/index",async (req, res)=> {
-    
-    res.json({mensaje:"Hola mundo"});
-});
-
 
 app.post("/insertusuario",async (req, res)=> {
     
@@ -115,6 +366,19 @@ app.post("/insertusuario",async (req, res)=> {
  
     res.json({mensaje:"Usuario insertado Correctamente2"});
 });
+
+
+app.post("/insertusuario",async (req, res)=> {
+    
+  let body=req.body;
+  const insert = connection.query('INSERT INTO Usuario(usuario,nombre,foto,contrasenia) VALUES(?,?,?,?)', [body.Usuario,body.Nombre,body.Foto,body.Contrasenia], function (err, result) {
+      if (err) throw err;
+      console.log("");
+    });
+
+  res.json({mensaje:"Usuario insertado Correctamente2"});
+});
+
     
 app.post("/login",async (req, res)=> {
     
@@ -250,6 +514,9 @@ app.post("/albums",async (req, res)=> {
 
 });
 
+
+
+
 var corsOptions = {
   origin: 'http://localhost:4200',
   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
@@ -327,10 +594,10 @@ app.post("/analizar",async (req, res)=> {
     
     var imagen = req.body.imagen;
   var params = {
-    /* S3Object: {
+     S3Object: {
       Bucket: "mybucket", 
       Name: "mysourceimage"
-    }*/
+    }
     Image: { 
       Bytes: Buffer.from(imagen, 'base64')
     }, 
@@ -419,11 +686,6 @@ app.post("/insertfoto",async (req, res)=> {
 });
 
 
-
-
-
-
-
 app.post("/fotos",async (req, res)=> {
     
     let body=req.body;
@@ -432,7 +694,6 @@ app.post("/fotos",async (req, res)=> {
     res.json(rows);
 });
 
-});
+});*/
 
 
-app.listen(3000,"0.0.0.0",() => console.log('Corriendo en el puerto 3000..'))
