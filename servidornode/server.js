@@ -5,14 +5,6 @@ var AWS = require('aws-sdk');
 const mysql = require('mysql');
 
 const uuidv1 = require('uuid/v1');
-/*
-AWS.config.loadFromPath({
-  accessKeyId:'AKIA2TKFJE5IAJRNLTEP',
-  secretAccessKey:'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',
-  region:'us-east-1'
-
-});*/
-
 
 var bodyParser = require('body-parser')
 
@@ -28,37 +20,37 @@ app.use(bodyParser.json({limit: "90mb"}));
 app.use(bodyParser.urlencoded({limit: "90mb", extended: true, parameterLimit:50000}));
 
 const s3 = new AWS.S3({
-        accessKeyId:'AKIAVXA5U3DZAWW67KE4',
-        secretAccessKey:'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',
+        accessKeyId:'*',
+        secretAccessKey:'*',
         region:'us-east-2'
 
 });
 
 const rek = new AWS.Rekognition({
-    accessKeyId:'AKIA2TKFJE5ICYFO2C2I',
-    secretAccessKey:'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',
+    accessKeyId:'*',
+    secretAccessKey:'*',
     region:'us-east-1'
 }
 );
 
 const translate = new AWS.Translate({
-        accessKeyId:'AKIA2TKFJE5IAJRNLTEP',
-        secretAccessKey:'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',
+        accessKeyId:'*',
+        secretAccessKey:'*',
         region:'us-east-1'
 });
 
 const connection = mysql.createConnection({
-    host: 'database-1.cjcnmccjn0xj.us-east-1.rds.amazonaws.com',
-    user: 'admin',
-    password: 'admin123',
-    database: 'proyectosemi'
+    host: '*',
+    user: '*',
+    password: '*',
+    database: '*'
   });
 
   const Polly = new AWS.Polly({
     signatureVersion: 'v4',
     region: 'us-east-1',
-    accessKeyId:'AKIA2TKFJE5IAJRNLTEP',
-    secretAccessKey:'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',
+    accessKeyId:'*',
+    secretAccessKey:'*',
   })
 
 
